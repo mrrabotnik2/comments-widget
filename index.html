@@ -43,6 +43,14 @@
       font-size: 0.9em;
       margin-left: 10px;
     }
+    #debug {
+      background: #f5f5f5;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      font-size: 12px;
+      color: #666;
+    }
   </style>
 
   <!-- Load Supabase -->
@@ -52,6 +60,13 @@
 <body>
 
 <h3>Comments</h3>
+
+<!-- Debug info -->
+<div id="debug" style="display: none;">
+  <strong>Debug Info:</strong><br>
+  Current Parent ID: <span id="debug-parent">null</span><br>
+  Replying to: <span id="debug-reply-to">none</span>
+</div>
 
 <!-- Comment form -->
 <h4>Leave a comment</h4>
@@ -74,6 +89,12 @@
    Supabase initialization
    ================================ */
 
+// Enable debug mode - remove this in production
+const DEBUG = true;
+if (DEBUG) {
+  document.getElementById('debug').style.display = 'block';
+}
+
 const sb = supabase.createClient(
   'https://pidzgdrdgqgsayfoxqba.supabase.co',
   'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z'
@@ -84,46 +105,76 @@ let currentParentId = null;
 let replyingToName = null;
 
 /* ================================
+   Update debug display
+   ================================ */
+function updateDebugInfo() {
+  if (DEBUG) {
+    document.getElementById('debug-parent').textContent = currentParentId;
+    document.getElementById('debug-reply-to').textContent = replyingToName || 'none';
+  }
+}
+
+/* ================================
    Post comment
    ================================ */
 async function postComment() {
+  console.log("=== POST COMMENT CALLED ===");
+  console.log("Current parentId:", currentParentId);
+  
   const name = document.getElementById('name').value.trim() || null;
   const email = document.getElementById('email').value.trim() || null;
   const content = document.getElementById('content').value.trim();
+
+  console.log("Form values:", { name, email, content });
 
   if (!content) {
     alert('Please write a comment.');
     return;
   }
 
-  console.log(`Posting comment with parentId: ${currentParentId}`);
-
-  // Insert the comment into Supabase
-  const { error } = await sb.from('comments').insert({
+  // Prepare the data to insert
+  const commentData = {
     name: name,
     email: email,
     content: content,
     parent_id: currentParentId,
     page: 'life-and-death-in-gaza'
-  });
+  };
 
-  if (error) {
-    console.error(error);
-    alert('Error posting comment');
-    return;
+  console.log("Data to insert:", commentData);
+
+  try {
+    // Insert the comment into Supabase
+    const { data, error } = await sb.from('comments').insert([commentData]).select();
+    
+    if (error) {
+      console.error("Supabase error:", error);
+      alert('Error posting comment: ' + error.message);
+      return;
+    }
+    
+    console.log("Insert successful:", data);
+
+    // Clear the form and reset state
+    resetForm();
+    
+    // Reload the comments
+    loadComments();
+    
+    alert('Comment posted successfully!');
+    
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    alert('Unexpected error: ' + err.message);
   }
-
-  // Clear the form and reset state
-  resetForm();
-  
-  // Reload the comments
-  loadComments();
 }
 
 /* ================================
    Reset form to default state
    ================================ */
 function resetForm() {
+  console.log("Resetting form");
+  
   document.getElementById('name').value = '';
   document.getElementById('email').value = '';
   document.getElementById('content').value = '';
@@ -138,12 +189,15 @@ function resetForm() {
   // Reset global variables
   currentParentId = null;
   replyingToName = null;
+  
+  updateDebugInfo();
 }
 
 /* ================================
    Cancel reply
    ================================ */
 function cancelReply() {
+  console.log("Cancelling reply");
   resetForm();
 }
 
@@ -151,7 +205,9 @@ function cancelReply() {
    Reply to comment
    ================================ */
 function replyToComment(parentId, commenterName) {
-  console.log(`Replying to comment with parentId: ${parentId}`);
+  console.log("=== REPLY TO COMMENT ===");
+  console.log("parentId:", parentId);
+  console.log("commenterName:", commenterName);
   
   // Set the parentId
   currentParentId = parentId;
@@ -165,88 +221,140 @@ function replyToComment(parentId, commenterName) {
   // Update button text
   document.getElementById('postBtn').innerHTML = 'Post Reply';
   
+  // Update debug info
+  updateDebugInfo();
+  
   // Scroll to the comment form
   document.getElementById('content').focus();
+  
+  console.log("Reply mode activated for parentId:", currentParentId);
 }
 
 /* ================================
    Load comments with proper nesting
    ================================ */
 async function loadComments() {
-  const { data, error } = await sb
-    .from('comments')
-    .select('*')
-    .eq('page', 'life-and-death-in-gaza')
-    .order('created_at', { ascending: true });
+  console.log("Loading comments...");
+  
+  try {
+    const { data, error } = await sb
+      .from('comments')
+      .select('*')
+      .eq('page', 'life-and-death-in-gaza')
+      .order('created_at', { ascending: true });
 
-  if (error) {
-    console.error(error);
-    return;
+    if (error) {
+      console.error("Error loading comments:", error);
+      return;
+    }
+
+    console.log("Loaded comments:", data);
+
+    const container = document.getElementById('comments');
+    container.innerHTML = '';
+
+    if (data.length === 0) {
+      container.innerHTML = '<p>No comments yet. Be the first to comment!</p>';
+      return;
+    }
+
+    // Helper function to display comments recursively
+    function displayComments(comments, parentId = null, depth = 0) {
+      // Filter comments by parentId
+      const filteredComments = comments.filter(c => {
+        // For top-level comments (null parent_id)
+        if (parentId === null) {
+          return c.parent_id === null || c.parent_id === 0;
+        }
+        // For replies
+        return c.parent_id === parentId;
+      });
+
+      // Display each comment and its replies
+      filteredComments.forEach(comment => {
+        const div = document.createElement('div');
+        const commenterName = comment.name ? comment.name : 'Anonymous';
+        
+        // Add indentation for replies
+        const marginLeft = depth * 30;
+        div.style.marginLeft = `${marginLeft}px`;
+        div.style.marginTop = '10px';
+        div.style.padding = '10px';
+        div.style.borderLeft = depth > 0 ? '2px solid #ddd' : 'none';
+        div.style.backgroundColor = depth > 0 ? '#f9f9f9' : 'transparent';
+        
+        // Display comment
+        div.innerHTML = `
+          <div>
+            <strong>${commenterName}</strong>
+            <span style="color: #666; font-size: 0.9em; margin-left: 10px;">
+              ${new Date(comment.created_at).toLocaleDateString()} 
+              ${new Date(comment.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+            </span>
+          </div>
+          <div style="margin: 10px 0;">${comment.content}</div>
+          <button onclick="replyToComment(${comment.id}, '${commenterName.replace(/'/g, "\\'")}')">
+            Reply
+          </button>
+        `;
+        
+        container.appendChild(div);
+        
+        // Recursively display replies
+        displayComments(comments, comment.id, depth + 1);
+      });
+    }
+
+    // Start displaying from top-level comments
+    displayComments(data);
+    
+  } catch (err) {
+    console.error("Unexpected error loading comments:", err);
+    document.getElementById('comments').innerHTML = '<p style="color: red;">Error loading comments. Please refresh the page.</p>';
   }
+}
 
-  console.log("Loaded comments:", data);
-
-  const container = document.getElementById('comments');
-  container.innerHTML = '';
-
-  // Create a map to quickly find comments by their ID
-  const commentsMap = new Map();
-  data.forEach(comment => {
-    commentsMap.set(comment.id, comment);
-  });
-
-  // Helper function to display comments recursively
-  function displayComments(comments, parentId = null, depth = 0) {
-    // Filter comments by parentId
-    const filteredComments = comments.filter(c => {
-      // Handle null parent_id (0 or null) for top-level comments
-      if (parentId === null) {
-        return c.parent_id === null || c.parent_id === 0;
-      }
-      return c.parent_id === parentId;
-    });
-
-    // Display each comment and its replies
-    filteredComments.forEach(comment => {
-      const div = document.createElement('div');
-      const commenterName = comment.name ? comment.name : 'Anonymous';
-      
-      // Add indentation for replies
-      const marginLeft = depth * 30;
-      div.style.marginLeft = `${marginLeft}px`;
-      div.style.marginTop = '10px';
-      div.style.padding = '10px';
-      div.style.borderLeft = depth > 0 ? '2px solid #ddd' : 'none';
-      
-      // Display comment
-      div.innerHTML = `
-        <div>
-          <strong>${commenterName}</strong>
-          <span style="color: #666; font-size: 0.9em; margin-left: 10px;">
-            ${new Date(comment.created_at).toLocaleDateString()}
-          </span>
-        </div>
-        <div style="margin: 5px 0;">${comment.content}</div>
-        <button onclick="replyToComment(${comment.id}, '${commenterName.replace(/'/g, "\\'")}')">
-          Reply
-        </button>
-      `;
-      
-      container.appendChild(div);
-      
-      // Recursively display replies
-      displayComments(comments, comment.id, depth + 1);
-    });
+/* ================================
+   Test Supabase connection
+   ================================ */
+async function testConnection() {
+  try {
+    console.log("Testing Supabase connection...");
+    const { data, error } = await sb.from('comments').select('count', { count: 'exact', head: true });
+    
+    if (error) {
+      console.error("Connection test failed:", error);
+      alert('Cannot connect to database. Please check your Supabase configuration.');
+    } else {
+      console.log("Connection test successful. Total comments:", data);
+    }
+  } catch (err) {
+    console.error("Connection test error:", err);
   }
-
-  // Start displaying from top-level comments
-  displayComments(data);
 }
 
 /* ================================
    Initial load
    ================================ */
-loadComments();
+window.addEventListener('DOMContentLoaded', () => {
+  console.log("DOM loaded, initializing...");
+  
+  // Test connection first
+  testConnection();
+  
+  // Load comments
+  loadComments();
+  
+  // Initialize debug info
+  updateDebugInfo();
+  
+  // Add event listener for Enter key in textarea
+  document.getElementById('content').addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'Enter') {
+      postComment();
+    }
+  });
+});
 </script>
 
 </body>
