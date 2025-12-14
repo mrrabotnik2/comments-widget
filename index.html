@@ -154,7 +154,9 @@ function replyToComment(parentId) {
 
   // Update the postBtn function to send the parentId when replying
   // This directly modifies the onclick for the "Post Comment" button
-  document.getElementById('postBtn').onclick = () => postComment(parentId);
+  document.getElementById('postBtn').onclick = function() {
+    postComment(parentId);  // Post with the correct parentId
+  };
 }
 
 /* ================================
