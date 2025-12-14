@@ -9,9 +9,7 @@ body { font-family: serif; max-width: 700px; margin: 2em auto; }
 textarea { width: 100%; height: 80px; }
 button { margin-top: 0.5em; }
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">document.getElementById('postBtn').addEventListener('click', function() {
-  postComment(null);
-});</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -30,7 +28,9 @@ const supabase = supabase.createClient(
   'https://pidzgdrdgqgsayfoxqba.supabase.co',
   'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z'
 );
-
+document.getElementById('postBtn').addEventListener('click', function() {
+  postComment(null);
+});
 const page = window.location.pathname;
 
 async function loadComments() {
