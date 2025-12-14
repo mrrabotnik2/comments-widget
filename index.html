@@ -59,8 +59,9 @@ const sb = supabase.createClient(
   'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z'
 );
 
-// Global variable for parent_id
-let currentParentId = null;
+// Global variables
+let currentParentId = null;  // To track the parent comment ID for replies
+let isReplying = false;      // To track if the user is replying or posting a new comment
 
 /* ================================
    Post comment
@@ -75,9 +76,9 @@ async function postComment() {
     return;
   }
 
+  // If replying, we set the parent_id as currentParentId
   console.log(`Posting comment with parentId: ${currentParentId}`); // Log to check
 
-  // Insert the comment along with name, email, content, and parent_id into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
     email: email,  // Insert email value
@@ -99,6 +100,12 @@ async function postComment() {
 
   // Reset currentParentId to null after posting
   currentParentId = null;
+
+  // Reset the reply flag
+  isReplying = false;
+
+  // Reset the button text
+  document.getElementById('postBtn').innerText = "Post Comment";
 
   // Reload the comments to display the newly posted comment
   loadComments();
@@ -124,7 +131,6 @@ async function loadComments() {
 
   // Helper function to display comments
   function displayComments(comments, parentId = null) {
-    // Filter and display the comments that match the parentId
     comments.filter(c => c.parent_id === parentId).forEach(c => {
       const div = document.createElement('div');
       div.className = 'comment';
@@ -164,6 +170,9 @@ function replyToComment(parentId) {
 
   // Set the parentId in the global variable
   currentParentId = parentId;
+
+  // Set the flag to indicate we're replying
+  isReplying = true;
 
   // Change the text in the textarea to indicate replying
   document.getElementById('content').placeholder = 'Your reply...';
