@@ -131,9 +131,18 @@ async function loadComments() {
 
       const commenterName = c.name ? c.name : 'Anonymous';  // Use "Anonymous" if no name is provided
 
-      // Insert name, content, and a reply button
-      div.innerHTML = `<strong>${commenterName}</strong><br>${c.content}<br>
-                       <button onclick="replyToComment(${c.id})">Reply</button>`;
+      // Insert name, content
+      div.innerHTML = `<strong>${commenterName}</strong><br>${c.content}<br>`;
+
+      // Create the Reply button and assign an event listener
+      const replyButton = document.createElement('button');
+      replyButton.textContent = "Reply";
+      replyButton.onclick = function() {
+        replyToComment(c.id); // Call the replyToComment function with the correct parentId
+      };
+
+      // Append the reply button to the comment div
+      div.appendChild(replyButton);
 
       // Append the comment to the container
       container.appendChild(div);
