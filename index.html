@@ -35,6 +35,8 @@
 <!-- Comment form -->
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
+
+<!-- This email field is visible and usable by the user -->
 <input id="email" type="email" placeholder="Your Email"><br><br>
 
 <textarea id="content" placeholder="Your comment"></textarea><br>
@@ -69,7 +71,7 @@ async function postComment() {
   // Insert the comment into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
-    email: email,  // Insert email value, it will be stored but not shown on the page
+    email: email,  // Email is stored in the database but will not be displayed
     content: content,
     page: 'life-and-death-in-gaza'
   });
@@ -107,7 +109,7 @@ async function loadComments() {
   const container = document.getElementById('comments');
   container.innerHTML = ''; // Clear existing comments before reloading
 
-  // Display all comments
+  // Display all comments without any replies
   data.forEach(c => {
     const div = document.createElement('div');
     div.className = 'comment';
