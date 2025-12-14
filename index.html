@@ -30,7 +30,7 @@
     }
   </style>
 
-  <!-- Load Supabase FIRST -->
+  <!-- Load Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -149,11 +149,10 @@ async function loadComments() {
 function replyToComment(parentId) {
   console.log(`Replying to comment with parentId: ${parentId}`); // Log to check
 
-  // Set the parentId in the form for replying
+  // Change the text in the textarea to indicate replying
   document.getElementById('content').placeholder = 'Your reply...';
 
-  // Update the postBtn function to send the parentId when replying
-  // This directly modifies the onclick for the "Post Comment" button
+  // Change the button action to post a reply (with parentId)
   document.getElementById('postBtn').onclick = function() {
     postComment(parentId);  // Post with the correct parentId
   };
