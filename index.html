@@ -43,27 +43,27 @@
 <div id="comments"></div>
 
 <script>
-/* ================================
-   Supabase initialization
-   ================================ */
+// ================================
+   // Supabase initialization
+   // ================================
 const sb = supabase.createClient(
   'https://pidzgdrdgqgsayfoxqba.supabase.co',
   'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z'
 );
 
-/* ================================
-   Get the page identifier from the URL
-   ================================ */
+// ================================
+   // Get the page identifier from the URL
+   // ================================
 function getPageIdentifier() {
   const urlPath = window.location.pathname;
-  const page = urlPath.split('/').pop(); // Extract last part of the URL (e.g., page1, life-and-death-in-gaza)
+  const page = urlPath.split('/').pop(); // Extract the last part of the URL path (e.g., life-and-death-in-gaza, page1)
   console.log('Page Identifier:', page); // Debugging line to see the page identifier
   return page;
 }
 
-/* ================================
-   Post comment
-   ================================ */
+// ================================
+   // Post comment
+   // ================================
 async function postComment() {
   const name = document.getElementById('name').value || null;
   const email = document.getElementById('email').value.trim() || null;
@@ -75,12 +75,14 @@ async function postComment() {
     return;
   }
 
+  console.log('Posting comment to page:', page);  // Debugging line
+
   // Insert the comment into Supabase, associating it with the current page
   const { error } = await sb.from('comments').insert({
     name: name,
     email: email,  // Email is stored but not displayed
     content: content,
-    page: page // Store the page identifier for this comment
+    page: page // Associate comment with the current page
   });
 
   if (error) {
@@ -98,17 +100,17 @@ async function postComment() {
   loadComments();
 }
 
-/* ================================
-   Load comments for the current page
-   ================================ */
+// ================================
+   // Load comments for the current page
+   // ================================
 async function loadComments() {
   const page = getPageIdentifier(); // Get the page identifier dynamically
-  console.log('Loading comments for page:', page); // Debugging line
+  console.log('Loading comments for page:', page);  // Debugging line
 
   const { data, error } = await sb
     .from('comments')
     .select('*')
-    .eq('page', page) // Filter comments by page identifier
+    .eq('page', page) // Filter comments by the current page identifier
     .order('created_at', { ascending: false }); // Newest first
 
   if (error) {
@@ -134,9 +136,9 @@ async function loadComments() {
   });
 }
 
-/* ================================
-   Initial load
-   ================================ */
+// ================================
+   // Initial load
+   // ================================
 loadComments();
 </script>
 
