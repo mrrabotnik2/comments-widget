@@ -35,9 +35,10 @@
 
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
-<input id="email" placeholder="Email (optional)" type="email"><br><br>
+<input id="email" placeholder="Email (optional)" type="email"><br><br>  <!-- Email input added here -->
 <textarea id="content" placeholder="Your comment"></textarea><br>
 <button id="postBtn">Post Comment</button>
+
 <script>
 /* ================================
    Supabase initialization
@@ -53,6 +54,7 @@ const sb = supabase.createClient(
    ================================ */
 async function postComment() {
   const name = document.getElementById('name').value || null;
+  const email = document.getElementById('email').value.trim() || null;  // Get email value, or null if empty
   const content = document.getElementById('content').value.trim();
 
   if (!content) {
@@ -60,8 +62,10 @@ async function postComment() {
     return;
   }
 
+  // Insert the comment along with name, email, and content into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
+    email: email,  // Insert the email value (if provided)
     content: content,
     page: 'life-and-death-in-gaza'
   });
@@ -72,10 +76,13 @@ async function postComment() {
     return;
   }
 
+  // Clear the input fields after posting the comment
   document.getElementById('name').value = '';
+  document.getElementById('email').value = '';  // Clear email field as well
   document.getElementById('content').value = '';
 
-  loadComments(); // Reload comments after posting
+  // Reload the comments to display the newly posted comment
+  loadComments();
 }
 
 /* ================================
@@ -94,14 +101,17 @@ async function loadComments() {
   }
 
   const container = document.getElementById('comments');
-  container.innerHTML = ''; // Clear the existing comments before reloading
+  container.innerHTML = ''; // Clear existing comments before reloading
 
   data.forEach(c => {
     const div = document.createElement('div');
     div.className = 'comment';
-    // Use a fallback name if the comment's name is null or empty
-    const commenterName = c.name ? c.name : 'Anonymous';
-    div.innerHTML = `<strong>${commenterName}</strong><br>${c.content}`;
+
+    const commenterName = c.name ? c.name : 'Anonymous';  // Use "Anonymous" if no name is provided
+    const commenterEmail = c.email ? `<br><small>Email: ${c.email}</small>` : '';  // Only show email if available
+
+    // Insert the name, email, and comment content
+    div.innerHTML = `<strong>${commenterName}</strong>${commenterEmail}<br>${c.content}`;
     container.appendChild(div);
   });
 }
