@@ -44,7 +44,7 @@
 <input id="email" type="email" placeholder="Your Email"><br><br>
 
 <textarea id="content" placeholder="Your comment"></textarea><br>
-<button id="postBtn">Post Comment</button>
+<button id="postBtn" onclick="postComment()">Post Comment</button>
 
 <!-- Comment container -->
 <div id="comments"></div>
@@ -151,15 +151,11 @@ function replyToComment(parentId) {
 
   // Set the parentId in the form for replying
   document.getElementById('content').placeholder = 'Your reply...';
-  
-  // Automatically update the post comment function to handle the reply
+
+  // Update the postBtn function to send the parentId when replying
+  // This directly modifies the onclick for the "Post Comment" button
   document.getElementById('postBtn').onclick = () => postComment(parentId);
 }
-
-/* ================================
-   Event wiring
-   ================================ */
-document.getElementById('postBtn').addEventListener('click', () => postComment());
 
 /* ================================
    Initial load
