@@ -56,8 +56,12 @@ const sb = supabase.createClient(
    // ================================
 function getPageIdentifier() {
   const urlPath = window.location.pathname;
-  const page = urlPath.split('/').pop(); // Extract last part of the URL path (e.g., life-and-death-in-gaza)
-  console.log('Page Identifier:', page); // Debugging line to ensure we get the correct page
+  console.log('Current URL:', window.location.href);  // Debugging line to print the full URL
+
+  // Ensure the page name is extracted correctly from the URL (e.g., /life-and-death-in-gaza or /cigarettes-kill)
+  const page = urlPath.split('/').filter(Boolean).pop(); // Use filter(Boolean) to remove empty strings from the path
+
+  console.log('Page Identifier Extracted:', page);  // Debugging line to see the extracted page name
   return page;
 }
 
@@ -76,6 +80,11 @@ async function postComment() {
   }
 
   console.log('Posting comment to page:', page);  // Debugging line to ensure we are posting to the right page
+
+  if (!page) {
+    alert('Page identifier is missing. Please check the URL.');
+    return;
+  }
 
   // Insert the comment into Supabase, associating it with the current page
   const { error } = await sb.from('comments').insert({
