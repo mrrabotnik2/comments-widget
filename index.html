@@ -35,7 +35,7 @@
 <!-- Comment form -->
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
-<input id="email" type="email" placeholder="Your Email"><br><br>
+<input id="email" type="email" placeholder="Your Email (hidden)"><br><br>
 <textarea id="content" placeholder="Your comment"></textarea><br>
 <button id="postBtn" onclick="postComment()">Post Comment</button>
 
@@ -43,27 +43,27 @@
 <div id="comments"></div>
 
 <script>
-// ================================
-   // Supabase initialization
-   // ================================
+/* ================================
+   Supabase initialization
+   ================================ */
 const sb = supabase.createClient(
   'https://pidzgdrdgqgsayfoxqba.supabase.co',
   'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z'
 );
 
-// ================================
-   // Get the page identifier from the URL
-   // ================================
+/* ================================
+   Get the page identifier from the URL
+   ================================ */
 function getPageIdentifier() {
   const urlPath = window.location.pathname;
-  const page = urlPath.split('/').pop(); // Extract last part of the URL (e.g., page1, page2)
+  const page = urlPath.split('/').pop(); // Extract last part of the URL (e.g., page1, life-and-death-in-gaza)
   console.log('Page Identifier:', page); // Debugging line to see the page identifier
   return page;
 }
 
-// ================================
-   // Post comment
-   // ================================
+/* ================================
+   Post comment
+   ================================ */
 async function postComment() {
   const name = document.getElementById('name').value || null;
   const email = document.getElementById('email').value.trim() || null;
@@ -80,7 +80,7 @@ async function postComment() {
     name: name,
     email: email,  // Email is stored but not displayed
     content: content,
-    page: page // Associate comment with the current page
+    page: page // Store the page identifier for this comment
   });
 
   if (error) {
@@ -98,9 +98,9 @@ async function postComment() {
   loadComments();
 }
 
-// ================================
-   // Load comments for the current page
-   // ================================
+/* ================================
+   Load comments for the current page
+   ================================ */
 async function loadComments() {
   const page = getPageIdentifier(); // Get the page identifier dynamically
   console.log('Loading comments for page:', page); // Debugging line
@@ -134,9 +134,9 @@ async function loadComments() {
   });
 }
 
-// ================================
-   // Initial load
-   // ================================
+/* ================================
+   Initial load
+   ================================ */
 loadComments();
 </script>
 
