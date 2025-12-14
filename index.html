@@ -69,7 +69,7 @@ async function postComment() {
   // Insert the comment into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
-    email: email,  // Insert email value but it will not show up
+    email: email,  // Insert email value but it will not show up on the page
     content: content,
     page: 'life-and-death-in-gaza'
   });
@@ -107,7 +107,7 @@ async function loadComments() {
   const container = document.getElementById('comments');
   container.innerHTML = ''; // Clear existing comments before reloading
 
-  // Display all comments without replies
+  // Display all comments without any replies
   data.forEach(c => {
     const div = document.createElement('div');
     div.className = 'comment';
