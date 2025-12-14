@@ -36,7 +36,7 @@
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
 
-<!-- Email input is visible, allowing the user to enter their email -->
+<!-- Email field visible for users to enter their email -->
 <input id="email" type="email" placeholder="Your Email"><br><br>
 
 <textarea id="content" placeholder="Your comment"></textarea><br>
@@ -60,7 +60,7 @@ const sb = supabase.createClient(
    ================================ */
 async function postComment() {
   const name = document.getElementById('name').value || null;
-  const email = document.getElementById('email').value.trim() || null;  // Get email value
+  const email = document.getElementById('email').value.trim() || null;  // Get email value from input
   const content = document.getElementById('content').value.trim();
 
   if (!content) {
@@ -115,7 +115,7 @@ async function loadComments() {
 
     const commenterName = c.name ? c.name : 'Anonymous';  // Use "Anonymous" if no name is provided
 
-    // Insert only the name and content, not the email
+    // Insert only the name and content (email will not be shown)
     div.innerHTML = `<strong>${commenterName}</strong><br>${c.content}`;
     container.appendChild(div);
   });
