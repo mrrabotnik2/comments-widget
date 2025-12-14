@@ -15,6 +15,12 @@
       padding-left: 1em;
       border-left: 1px solid #ccc;
     }
+    .reply {
+      margin-left: 20px;
+      margin-top: 1em;
+      border-left: 2px solid #ddd;
+      padding-left: 15px;
+    }
     textarea {
       width: 100%;
       height: 80px;
@@ -35,8 +41,6 @@
 <!-- Comment form -->
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
-
-<!-- Email field visible for users to enter their email -->
 <input id="email" type="email" placeholder="Your Email"><br><br>
 
 <textarea id="content" placeholder="Your comment"></textarea><br>
@@ -58,9 +62,9 @@ const sb = supabase.createClient(
 /* ================================
    Post comment
    ================================ */
-async function postComment() {
+async function postComment(parentId = null) {
   const name = document.getElementById('name').value || null;
-  const email = document.getElementById('email').value.trim() || null;  // Get email value from input
+  const email = document.getElementById('email').value.trim() || null;
   const content = document.getElementById('content').value.trim();
 
   if (!content) {
@@ -68,11 +72,12 @@ async function postComment() {
     return;
   }
 
-  // Insert the comment along with name, email, and content into Supabase
+  // Insert the comment along with name, email, content, and parent_id into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
     email: email,  // Insert email value
     content: content,
+    parent_id: parentId,  // Parent comment ID (null for main comments)
     page: 'life-and-death-in-gaza'
   });
 
@@ -109,22 +114,49 @@ async function loadComments() {
   const container = document.getElementById('comments');
   container.innerHTML = ''; // Clear existing comments before reloading
 
-  data.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'comment';
+  // Helper function to display comments
+  function displayComments(comments, parentId = null) {
+    comments.filter(c => c.parent_id === parentId).forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'comment';
 
-    const commenterName = c.name ? c.name : 'Anonymous';  // Use "Anonymous" if no name is provided
+      const commenterName = c.name ? c.name : 'Anonymous';  // Use "Anonymous" if no name is provided
 
-    // Insert only the name and content (email will not be shown)
-    div.innerHTML = `<strong>${commenterName}</strong><br>${c.content}`;
-    container.appendChild(div);
-  });
+      // Insert name, content, and a reply button
+      div.innerHTML = `<strong>${commenterName}</strong><br>${c.content}<br>
+                       <button onclick="replyToComment(${c.id})">Reply</button>`;
+
+      // Append the comment to the container
+      container.appendChild(div);
+
+      // Display replies recursively
+      displayComments(comments, c.id);
+    });
+  }
+
+  // Call the display function to display main comments
+  displayComments(data);
+}
+
+/* ================================
+   Reply to comment
+   ================================ */
+function replyToComment(parentId) {
+  // Set the parentId in the form for replying
+  document.getElementById('content').placeholder = 'Your reply...';
+  
+  // Automatically fill in the parent comment's content (optional)
+  // For simplicity, we're just allowing the user to write their own comment.
+  // You could add additional UI to show the comment they're replying to.
+
+  // Update the post comment function to send the parentId
+  document.getElementById('postBtn').onclick = () => postComment(parentId);
 }
 
 /* ================================
    Event wiring
    ================================ */
-document.getElementById('postBtn').addEventListener('click', postComment);
+document.getElementById('postBtn').addEventListener('click', () => postComment());
 
 /* ================================
    Initial load
