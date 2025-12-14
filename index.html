@@ -22,9 +22,9 @@
     button {
       margin-top: 0.5em;
     }
-    /* Hide the email field from the UI but keep it functional */
+    /* Hide the email input completely (does not take up space) */
     #email {
-      visibility: hidden;
+      display: none;
     }
   </style>
 
@@ -40,8 +40,8 @@
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
 
-<!-- Hidden email field (only visible to you in the code) -->
-<input id="email" placeholder="Email (hidden from view)" type="email" value="your-email@example.com"><br><br>
+<!-- Hidden email field (completely hidden from the user) -->
+<input id="email" type="email" value="your-email@example.com"><br><br>
 
 <textarea id="content" placeholder="Your comment"></textarea><br>
 <button id="postBtn">Post Comment</button>
