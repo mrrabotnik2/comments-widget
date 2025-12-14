@@ -22,10 +22,6 @@
     button {
       margin-top: 0.5em;
     }
-    /* Hide the email input field after it's entered (only for post-submission visibility) */
-    #email {
-      display: none;
-    }
   </style>
 
   <!-- Load Supabase FIRST -->
@@ -40,8 +36,8 @@
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
 
-<!-- Email field visible initially, will hide after submission -->
-<input id="email" type="email" placeholder="Your Email (won't show after posting)"><br><br>
+<!-- Email input is visible, allowing the user to enter their email -->
+<input id="email" type="email" placeholder="Your Email"><br><br>
 
 <textarea id="content" placeholder="Your comment"></textarea><br>
 <button id="postBtn">Post Comment</button>
@@ -91,9 +87,6 @@ async function postComment() {
   document.getElementById('email').value = '';  // Clear email field after submission
   document.getElementById('content').value = '';
 
-  // Hide the email field after submission
-  document.getElementById('email').style.display = 'none';  // Hide email field after posting
-
   // Reload the comments to display the newly posted comment
   loadComments();
 }
@@ -122,7 +115,7 @@ async function loadComments() {
 
     const commenterName = c.name ? c.name : 'Anonymous';  // Use "Anonymous" if no name is provided
 
-    // Insert the name and content without email
+    // Insert only the name and content, not the email
     div.innerHTML = `<strong>${commenterName}</strong><br>${c.content}`;
     container.appendChild(div);
   });
