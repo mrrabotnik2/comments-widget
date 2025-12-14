@@ -22,7 +22,7 @@
     button {
       margin-top: 0.5em;
     }
-    /* Hide the email input completely (does not take up space) */
+    /* Hide the email input field after it's entered (only for post-submission visibility) */
     #email {
       display: none;
     }
@@ -40,13 +40,13 @@
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
 
-<!-- Hidden email field (completely hidden from the user) -->
-<input id="email" type="email" value="your-email@example.com"><br><br>
+<!-- Email field visible initially, will hide after submission -->
+<input id="email" type="email" placeholder="Your Email (won't show after posting)"><br><br>
 
 <textarea id="content" placeholder="Your comment"></textarea><br>
 <button id="postBtn">Post Comment</button>
 
-<!-- Comment container (moved below the form) -->
+<!-- Comment container -->
 <div id="comments"></div>
 
 <script>
@@ -64,7 +64,7 @@ const sb = supabase.createClient(
    ================================ */
 async function postComment() {
   const name = document.getElementById('name').value || null;
-  const email = document.getElementById('email').value.trim() || null;  // Get email value (hidden from view)
+  const email = document.getElementById('email').value.trim() || null;  // Get email value
   const content = document.getElementById('content').value.trim();
 
   if (!content) {
@@ -75,7 +75,7 @@ async function postComment() {
   // Insert the comment along with name, email, and content into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
-    email: email,  // Insert the email value (hidden from the UI)
+    email: email,  // Insert email value
     content: content,
     page: 'life-and-death-in-gaza'
   });
@@ -88,8 +88,11 @@ async function postComment() {
 
   // Clear the input fields after posting the comment
   document.getElementById('name').value = '';
-  document.getElementById('email').value = '';  // Email remains hidden but cleared
+  document.getElementById('email').value = '';  // Clear email field after submission
   document.getElementById('content').value = '';
+
+  // Hide the email field after submission
+  document.getElementById('email').style.display = 'none';  // Hide email field after posting
 
   // Reload the comments to display the newly posted comment
   loadComments();
@@ -118,7 +121,6 @@ async function loadComments() {
     div.className = 'comment';
 
     const commenterName = c.name ? c.name : 'Anonymous';  // Use "Anonymous" if no name is provided
-    // Email is not displayed here anymore
 
     // Insert the name and content without email
     div.innerHTML = `<strong>${commenterName}</strong><br>${c.content}`;
