@@ -52,11 +52,12 @@ const sb = supabase.createClient(
 );
 
 // ================================
-   // Get the page identifier from the URL or set it manually
+   // Get the page identifier from the URL
    // ================================
 function getPageIdentifier() {
   const urlPath = window.location.pathname;
   const page = urlPath.split('/').pop(); // Extract last part of the URL (e.g., page1, page2)
+  console.log('Page Identifier:', page); // Debugging line to see the page identifier
   return page;
 }
 
@@ -74,7 +75,7 @@ async function postComment() {
     return;
   }
 
-  // Insert the comment into Supabase, associating with the page
+  // Insert the comment into Supabase, associating it with the current page
   const { error } = await sb.from('comments').insert({
     name: name,
     email: email,  // Email is stored but not displayed
@@ -102,11 +103,12 @@ async function postComment() {
    // ================================
 async function loadComments() {
   const page = getPageIdentifier(); // Get the page identifier dynamically
+  console.log('Loading comments for page:', page); // Debugging line
 
   const { data, error } = await sb
     .from('comments')
     .select('*')
-    .eq('page', page) // Load comments only for the current page
+    .eq('page', page) // Filter comments by page identifier
     .order('created_at', { ascending: false }); // Newest first
 
   if (error) {
