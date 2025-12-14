@@ -15,12 +15,6 @@
       padding-left: 1em;
       border-left: 1px solid #ccc;
     }
-    .reply {
-      margin-left: 20px;
-      margin-top: 1em;
-      border-left: 2px solid #ddd;
-      padding-left: 15px;
-    }
     textarea {
       width: 100%;
       height: 80px;
@@ -41,7 +35,7 @@
 <!-- Comment form -->
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
-<input id="email" type="email" placeholder="Your Email"><br><br>
+<input id="email" type="email" placeholder="Your Email" style="display:none"><br><br>
 
 <textarea id="content" placeholder="Your comment"></textarea><br>
 <button id="postBtn" onclick="postComment()">Post Comment</button>
@@ -59,12 +53,8 @@ const sb = supabase.createClient(
   'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z'
 );
 
-// Global variables
-let currentParentId = null;  // To track the parent comment ID for replies
-let isReplying = false;      // To track if the user is replying or posting a new comment
-
 /* ================================
-   Post a new comment
+   Post comment
    ================================ */
 async function postComment() {
   const name = document.getElementById('name').value || null;
@@ -79,9 +69,8 @@ async function postComment() {
   // Insert the comment into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
-    email: email,  // Insert email value
+    email: email,  // Insert email value but it will not show up
     content: content,
-    parent_id: null,  // No parent, so this is a main comment
     page: 'life-and-death-in-gaza'
   });
 
@@ -97,49 +86,6 @@ async function postComment() {
   document.getElementById('content').value = '';
 
   // Reload the comments to display the newly posted comment
-  loadComments();
-}
-
-/* ================================
-   Post a reply
-   ================================ */
-async function postReply() {
-  const name = document.getElementById('name').value || null;
-  const email = document.getElementById('email').value.trim() || null;
-  const content = document.getElementById('content').value.trim();
-
-  if (!content) {
-    alert('Please write a reply.');
-    return;
-  }
-
-  // Insert the reply into Supabase with the parent_id
-  const { error } = await sb.from('comments').insert({
-    name: name,
-    email: email,
-    content: content,
-    parent_id: currentParentId,  // Set the parent_id for replies
-    page: 'life-and-death-in-gaza'
-  });
-
-  if (error) {
-    console.error(error);
-    alert('Error posting reply');
-    return;
-  }
-
-  // Clear the input fields after posting the reply
-  document.getElementById('name').value = '';
-  document.getElementById('email').value = '';  // Clear email field after submission
-  document.getElementById('content').value = '';
-
-  // Reset currentParentId after posting the reply
-  currentParentId = null;
-
-  // Reset the button text back to "Post Comment"
-  document.getElementById('postBtn').innerText = "Post Comment";
-
-  // Reload the comments to display the newly posted reply
   loadComments();
 }
 
@@ -161,53 +107,19 @@ async function loadComments() {
   const container = document.getElementById('comments');
   container.innerHTML = ''; // Clear existing comments before reloading
 
-  // Helper function to display comments
-  function displayComments(comments, parentId = null) {
-    comments.filter(c => c.parent_id === parentId).forEach(c => {
-      const div = document.createElement('div');
-      div.className = 'comment';
+  // Display all comments without replies
+  data.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'comment';
 
-      const commenterName = c.name ? c.name : 'Anonymous';  // Use "Anonymous" if no name is provided
+    const commenterName = c.name ? c.name : 'Anonymous';  // Use "Anonymous" if no name is provided
 
-      // Insert name, content
-      div.innerHTML = `<strong>${commenterName}</strong><br>${c.content}<br>`;
+    // Insert name, content
+    div.innerHTML = `<strong>${commenterName}</strong><br>${c.content}`;
 
-      // Create the Reply button and assign an event listener
-      const replyButton = document.createElement('button');
-      replyButton.textContent = "Reply";
-      replyButton.onclick = function() {
-        replyToComment(c.id); // Call the replyToComment function with the correct parentId
-      };
-
-      // Append the reply button to the comment div
-      div.appendChild(replyButton);
-
-      // Append the comment to the container
-      container.appendChild(div);
-
-      // Recursively display replies (comments with matching parent_id)
-      displayComments(comments, c.id);
-    });
-  }
-
-  // Call the display function to display main comments
-  displayComments(data);
-}
-
-/* ================================
-   Reply to comment
-   ================================ */
-function replyToComment(parentId) {
-  console.log(`Replying to comment with parentId: ${parentId}`); // Log to check
-
-  // Set the parentId in the global variable
-  currentParentId = parentId;
-
-  // Set the flag to indicate we're replying
-  document.getElementById('content').placeholder = 'Your reply...';
-
-  // Change the button text to "Post Reply"
-  document.getElementById('postBtn').innerText = "Post Reply";
+    // Append the comment to the container
+    container.appendChild(div);
+  });
 }
 
 /* ================================
