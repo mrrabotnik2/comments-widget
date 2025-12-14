@@ -30,10 +30,10 @@ window.onload = function() {
   throw new Error("This is a test to confirm new code is running"); // ✅ intentional test error
 
   // Initialize Supabase client with a different variable name
-  const supabaseClient = supabase.createClient(
-    'https://pidzgdrdgqgsayfoxqba.supabase.co',   // Your Supabase URL
-    'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z' // Your anon key
-  );
+  const sb = supabase.createClient(
+  'https://pidzgdrdgqgsayfoxqba.supabase.co',
+  'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z'
+);
 
   // Function to post a comment
   async function postComment(parentId = null) {
