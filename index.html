@@ -28,6 +28,21 @@
     button {
       margin-top: 0.5em;
     }
+    .replying-to {
+      background-color: #f0f0f0;
+      padding: 5px;
+      margin-bottom: 10px;
+      border-radius: 3px;
+    }
+    .cancel-reply {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.9em;
+      margin-left: 10px;
+    }
   </style>
 
   <!-- Load Supabase -->
@@ -43,8 +58,13 @@
 <input id="name" placeholder="Name (optional)"><br><br>
 <input id="email" type="email" placeholder="Your Email"><br><br>
 
+<div id="reply-info" style="display: none;" class="replying-to">
+  <span id="reply-target">Replying to comment...</span>
+  <button class="cancel-reply" onclick="cancelReply()">Cancel</button>
+</div>
+
 <textarea id="content" placeholder="Your comment"></textarea><br>
-<button id="postBtn">Post Comment</button>
+<button id="postBtn" onclick="postComment()">Post Comment</button>
 
 <!-- Comment container -->
 <div id="comments"></div>
@@ -59,14 +79,15 @@ const sb = supabase.createClient(
   'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z'
 );
 
-// Global variable to keep track of current parent_id
+// Global variables
 let currentParentId = null;
+let replyingToName = null;
 
 /* ================================
    Post comment
    ================================ */
 async function postComment() {
-  const name = document.getElementById('name').value || null;
+  const name = document.getElementById('name').value.trim() || null;
   const email = document.getElementById('email').value.trim() || null;
   const content = document.getElementById('content').value.trim();
 
@@ -75,14 +96,14 @@ async function postComment() {
     return;
   }
 
-  console.log(`Posting comment with parentId: ${currentParentId}`); // Log to check
+  console.log(`Posting comment with parentId: ${currentParentId}`);
 
-  // Insert the comment along with name, email, content, and parent_id into Supabase
+  // Insert the comment into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
-    email: email,  // Insert email value
+    email: email,
     content: content,
-    parent_id: currentParentId,  // Parent comment ID (null for main comments)
+    parent_id: currentParentId,
     page: 'life-and-death-in-gaza'
   });
 
@@ -92,20 +113,64 @@ async function postComment() {
     return;
   }
 
-  // Clear the input fields after posting the comment
-  document.getElementById('name').value = '';
-  document.getElementById('email').value = '';  // Clear email field after submission
-  document.getElementById('content').value = '';
-
-  // Reset currentParentId to null (no parent for new comments)
-  currentParentId = null;
-
-  // Reload the comments to display the newly posted comment
+  // Clear the form and reset state
+  resetForm();
+  
+  // Reload the comments
   loadComments();
 }
 
 /* ================================
-   Load comments
+   Reset form to default state
+   ================================ */
+function resetForm() {
+  document.getElementById('name').value = '';
+  document.getElementById('email').value = '';
+  document.getElementById('content').value = '';
+  document.getElementById('content').placeholder = 'Your comment';
+  
+  // Hide reply info
+  document.getElementById('reply-info').style.display = 'none';
+  
+  // Reset button
+  document.getElementById('postBtn').innerHTML = 'Post Comment';
+  
+  // Reset global variables
+  currentParentId = null;
+  replyingToName = null;
+}
+
+/* ================================
+   Cancel reply
+   ================================ */
+function cancelReply() {
+  resetForm();
+}
+
+/* ================================
+   Reply to comment
+   ================================ */
+function replyToComment(parentId, commenterName) {
+  console.log(`Replying to comment with parentId: ${parentId}`);
+  
+  // Set the parentId
+  currentParentId = parentId;
+  replyingToName = commenterName;
+  
+  // Update the UI to show we're replying
+  document.getElementById('content').placeholder = `Reply to ${commenterName}...`;
+  document.getElementById('reply-target').textContent = `Replying to ${commenterName}`;
+  document.getElementById('reply-info').style.display = 'block';
+  
+  // Update button text
+  document.getElementById('postBtn').innerHTML = 'Post Reply';
+  
+  // Scroll to the comment form
+  document.getElementById('content').focus();
+}
+
+/* ================================
+   Load comments with proper nesting
    ================================ */
 async function loadComments() {
   const { data, error } = await sb
@@ -119,50 +184,63 @@ async function loadComments() {
     return;
   }
 
-  console.log("Loaded comments:", data); // Log to check
+  console.log("Loaded comments:", data);
 
   const container = document.getElementById('comments');
-  container.innerHTML = ''; // Clear existing comments before reloading
+  container.innerHTML = '';
 
-  // Helper function to display comments
-  function displayComments(comments, parentId = null) {
-    // Filter and display the comments that match the parentId
-    comments.filter(c => c.parent_id === parentId).forEach(c => {
+  // Create a map to quickly find comments by their ID
+  const commentsMap = new Map();
+  data.forEach(comment => {
+    commentsMap.set(comment.id, comment);
+  });
+
+  // Helper function to display comments recursively
+  function displayComments(comments, parentId = null, depth = 0) {
+    // Filter comments by parentId
+    const filteredComments = comments.filter(c => {
+      // Handle null parent_id (0 or null) for top-level comments
+      if (parentId === null) {
+        return c.parent_id === null || c.parent_id === 0;
+      }
+      return c.parent_id === parentId;
+    });
+
+    // Display each comment and its replies
+    filteredComments.forEach(comment => {
       const div = document.createElement('div');
-      div.className = 'comment';
-
-      const commenterName = c.name ? c.name : 'Anonymous';  // Use "Anonymous" if no name is provided
-
-      // Insert name, content, and a reply button
-      div.innerHTML = `<strong>${commenterName}</strong><br>${c.content}<br>
-                       <button onclick="replyToComment(${c.id})">Reply</button>`;
-
-      // Append the comment to the container
+      const commenterName = comment.name ? comment.name : 'Anonymous';
+      
+      // Add indentation for replies
+      const marginLeft = depth * 30;
+      div.style.marginLeft = `${marginLeft}px`;
+      div.style.marginTop = '10px';
+      div.style.padding = '10px';
+      div.style.borderLeft = depth > 0 ? '2px solid #ddd' : 'none';
+      
+      // Display comment
+      div.innerHTML = `
+        <div>
+          <strong>${commenterName}</strong>
+          <span style="color: #666; font-size: 0.9em; margin-left: 10px;">
+            ${new Date(comment.created_at).toLocaleDateString()}
+          </span>
+        </div>
+        <div style="margin: 5px 0;">${comment.content}</div>
+        <button onclick="replyToComment(${comment.id}, '${commenterName.replace(/'/g, "\\'")}')">
+          Reply
+        </button>
+      `;
+      
       container.appendChild(div);
-
-      // Recursively display replies (comments with matching parent_id)
-      displayComments(comments, c.id);
+      
+      // Recursively display replies
+      displayComments(comments, comment.id, depth + 1);
     });
   }
 
-  // Call the display function to display main comments
+  // Start displaying from top-level comments
   displayComments(data);
-}
-
-/* ================================
-   Reply to comment
-   ================================ */
-function replyToComment(parentId) {
-  console.log(`Replying to comment with parentId: ${parentId}`); // Log to check
-
-  // Set the parentId in the global variable to make it persist
-  currentParentId = parentId;
-
-  // Change the text in the textarea to indicate replying
-  document.getElementById('content').placeholder = 'Your reply...';
-
-  // Change the button action to post a reply (with parentId)
-  document.getElementById('postBtn').innerHTML = "Post Reply"; // Change button text
 }
 
 /* ================================
