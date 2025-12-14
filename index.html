@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Comments</title>
+<title>Comments Widget</title>
 <style>
 body { font-family: serif; max-width: 700px; margin: 2em auto; }
 .comment { margin-left: 1em; border-left: 1px solid #ccc; padding-left: 1em; margin-bottom: 1em; }
@@ -10,7 +10,7 @@ textarea { width: 100%; height: 80px; }
 button { margin-top: 0.5em; }
 </style>
 
-<!-- Load Supabase library first -->
+<!-- Load Supabase library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -22,27 +22,22 @@ button { margin-top: 0.5em; }
 <input id="name" placeholder="Name (optional)"><br><br>
 <input id="email" placeholder="Email (optional)"><br><br>
 <textarea id="content" placeholder="Your comment"></textarea><br>
-<button id="postBtn">Post</button>
+<button id="postBtn">Post Comment</button>
 
 <script>
-// Initialize Supabase client
+// 1️⃣ Initialize Supabase
 const supabase = supabase.createClient(
-  'https://pidzgdrdgqgsayfoxqba.supabase.co',
-  'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z'
+  'https://pidzgdrdgqgsayfoxqba.supabase.co',   // Your Supabase URL
+  'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z' // Your anon key
 );
 
-// Attach click listener AFTER Supabase is ready
-document.getElementById('postBtn').addEventListener('click', function() {
-  postComment(null);
-});
-
-// Function to post a comment
-async function postComment(parentId) {
-  const name = document.getElementById('name').value;
-  const email = document.getElementById('email').value;
+// 2️⃣ Function to post a comment
+async function postComment() {
+  const name = document.getElementById('name').value || null;
+  const email = document.getElementById('email').value || null;
   const content = document.getElementById('content').value;
 
-  if (!content) {
+  if (!content.trim()) {
     alert("Please write a comment before posting.");
     return;
   }
@@ -51,10 +46,10 @@ async function postComment(parentId) {
     .from('comments')
     .insert([{
       id: crypto.randomUUID(),
-      parent_id: parentId,
+      parent_id: null,
       page: 'life-and-death-in-gaza',
-      name: name || null,
-      email: email || null,
+      name: name,
+      email: email,
       content: content
     }]);
 
@@ -62,14 +57,14 @@ async function postComment(parentId) {
     console.error(error);
     alert("Error posting comment.");
   } else {
-    document.getElementById('content').value = '';
     document.getElementById('name').value = '';
     document.getElementById('email').value = '';
-    loadComments(); // refresh comments
+    document.getElementById('content').value = '';
+    loadComments();
   }
 }
 
-// Function to load comments
+// 3️⃣ Function to load comments
 async function loadComments() {
   const { data, error } = await supabase
     .from('comments')
@@ -93,7 +88,10 @@ async function loadComments() {
   });
 }
 
-// Load comments on page load
+// 4️⃣ Attach click listener AFTER Supabase is ready
+document.getElementById('postBtn').addEventListener('click', postComment);
+
+// 5️⃣ Load comments on page load
 loadComments();
 </script>
 
