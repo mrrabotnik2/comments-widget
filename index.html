@@ -152,11 +152,7 @@ function replyToComment(parentId) {
   // Set the parentId in the form for replying
   document.getElementById('content').placeholder = 'Your reply...';
   
-  // Automatically fill in the parent comment's content (optional)
-  // For simplicity, we're just allowing the user to write their own comment.
-  // You could add additional UI to show the comment they're replying to.
-
-  // Update the post comment function to send the parentId
+  // Automatically update the post comment function to handle the reply
   document.getElementById('postBtn').onclick = () => postComment(parentId);
 }
 
