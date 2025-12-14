@@ -22,6 +22,10 @@
     button {
       margin-top: 0.5em;
     }
+    /* Hide the email field from the UI but keep it functional */
+    #email {
+      visibility: hidden;
+    }
   </style>
 
   <!-- Load Supabase FIRST -->
@@ -36,8 +40,8 @@
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
 
-<!-- Hidden email field (completely hidden from the user and page) -->
-<input id="email" placeholder="Email (hidden from view)" type="email" hidden value="your-email@example.com"><br><br>
+<!-- Hidden email field (only visible to you in the code) -->
+<input id="email" placeholder="Email (hidden from view)" type="email" value="your-email@example.com"><br><br>
 
 <textarea id="content" placeholder="Your comment"></textarea><br>
 <button id="postBtn">Post Comment</button>
@@ -60,7 +64,7 @@ const sb = supabase.createClient(
    ================================ */
 async function postComment() {
   const name = document.getElementById('name').value || null;
-  const email = document.getElementById('email').value.trim() || null;  // Get email value, or null if empty
+  const email = document.getElementById('email').value.trim() || null;  // Get email value (hidden from view)
   const content = document.getElementById('content').value.trim();
 
   if (!content) {
@@ -71,7 +75,7 @@ async function postComment() {
   // Insert the comment along with name, email, and content into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
-    email: email,  // Insert the email value (it will be hidden from the UI)
+    email: email,  // Insert the email value (hidden from the UI)
     content: content,
     page: 'life-and-death-in-gaza'
   });
