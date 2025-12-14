@@ -10,7 +10,7 @@ textarea { width: 100%; height: 80px; }
 button { margin-top: 0.5em; }
 </style>
 
-<!-- Load Supabase library -->
+<!-- 1️⃣ Load Supabase JS library first -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -25,14 +25,14 @@ button { margin-top: 0.5em; }
 <button id="postBtn">Post Comment</button>
 
 <script>
-// 1️⃣ Initialize Supabase
+// 2️⃣ Initialize Supabase client
 const supabase = supabase.createClient(
-  'https://pidzgdrdgqgsayfoxqba.supabase.co',   // Your Supabase URL
-  'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z' // Your anon key
+  'https://pidzgdrdgqgsayfoxqba.supabase.co',   // Replace with your Supabase URL
+  'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z' // Replace with your anon key
 );
 
-// 2️⃣ Function to post a comment
-async function postComment() {
+// 3️⃣ Post a comment
+async function postComment(parentId = null) {
   const name = document.getElementById('name').value || null;
   const email = document.getElementById('email').value || null;
   const content = document.getElementById('content').value;
@@ -46,11 +46,11 @@ async function postComment() {
     .from('comments')
     .insert([{
       id: crypto.randomUUID(),
-      parent_id: null,
-      page: 'life-and-death-in-gaza',
-      name: name,
-      email: email,
-      content: content
+      parent_id: parentId,
+      page: 'life-and-death-in-gaza', // Replace with your page identifier
+      name,
+      email,
+      content
     }]);
 
   if (error) {
@@ -64,7 +64,7 @@ async function postComment() {
   }
 }
 
-// 3️⃣ Function to load comments
+// 4️⃣ Load all comments for this page
 async function loadComments() {
   const { data, error } = await supabase
     .from('comments')
@@ -88,10 +88,10 @@ async function loadComments() {
   });
 }
 
-// 4️⃣ Attach click listener AFTER Supabase is ready
-document.getElementById('postBtn').addEventListener('click', postComment);
+// 5️⃣ Attach click listener AFTER Supabase is ready
+document.getElementById('postBtn').addEventListener('click', () => postComment());
 
-// 5️⃣ Load comments on page load
+// 6️⃣ Load comments on page load
 loadComments();
 </script>
 
