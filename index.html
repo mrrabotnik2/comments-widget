@@ -35,7 +35,10 @@
 <!-- Comment form -->
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
-<input id="email" placeholder="Email (optional)" type="email"><br><br>
+
+<!-- Hidden email field (you'll still be able to submit it to Supabase) -->
+<input id="email" placeholder="Email (hidden from view)" type="email" style="display: none;" value="your-email@example.com"><br><br>
+
 <textarea id="content" placeholder="Your comment"></textarea><br>
 <button id="postBtn">Post Comment</button>
 
@@ -68,7 +71,7 @@ async function postComment() {
   // Insert the comment along with name, email, and content into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
-    email: email,  // Insert the email value (if provided)
+    email: email,  // Insert the email value (it will be hidden from the UI)
     content: content,
     page: 'life-and-death-in-gaza'
   });
@@ -81,7 +84,7 @@ async function postComment() {
 
   // Clear the input fields after posting the comment
   document.getElementById('name').value = '';
-  document.getElementById('email').value = '';  // Clear email field as well
+  document.getElementById('email').value = '';  // Email remains hidden but cleared
   document.getElementById('content').value = '';
 
   // Reload the comments to display the newly posted comment
@@ -111,10 +114,10 @@ async function loadComments() {
     div.className = 'comment';
 
     const commenterName = c.name ? c.name : 'Anonymous';  // Use "Anonymous" if no name is provided
-    const commenterEmail = c.email ? `<br><small>Email: ${c.email}</small>` : '';  // Only show email if available
+    // Email is not displayed here anymore
 
-    // Insert the name, email, and comment content
-    div.innerHTML = `<strong>${commenterName}</strong>${commenterEmail}<br>${c.content}`;
+    // Insert the name and content without email
+    div.innerHTML = `<strong>${commenterName}</strong><br>${c.content}`;
     container.appendChild(div);
   });
 }
