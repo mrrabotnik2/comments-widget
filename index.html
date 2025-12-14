@@ -9,7 +9,9 @@ body { font-family: serif; max-width: 700px; margin: 2em auto; }
 textarea { width: 100%; height: 80px; }
 button { margin-top: 0.5em; }
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">document.getElementById('postBtn').addEventListener('click', function() {
+  postComment(null);
+});</script>
 </head>
 <body>
 
@@ -20,7 +22,7 @@ button { margin-top: 0.5em; }
 <input id="name" placeholder="Name (optional)"><br><br>
 <input id="email" placeholder="Email (optional)"><br><br>
 <textarea id="content" placeholder="Your comment"></textarea><br>
-<button onclick="postComment(null)">Post</button>
+<button id="postBtn">Post</button>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
