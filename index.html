@@ -1,18 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Comments Widget</title>
-<style>
-body { font-family: serif; max-width: 700px; margin: 2em auto; }
-.comment { margin-left: 1em; border-left: 1px solid #ccc; padding-left: 1em; margin-bottom: 1em; }
-textarea { width: 100%; height: 80px; }
-button { margin-top: 0.5em; }
-</style>
+  <meta charset="UTF-8">
+  <title>Comments Widget</title>
 
-<!-- Load Supabase JS library first -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: serif;
+      max-width: 700px;
+      margin: 2em auto;
+    }
+    .comment {
+      margin-bottom: 1em;
+      padding-left: 1em;
+      border-left: 1px solid #ccc;
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+    }
+    button {
+      margin-top: 0.5em;
+    }
+  </style>
+
+  <!-- Load Supabase FIRST -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
 
 <h3>Comments</h3>
@@ -20,83 +35,84 @@ button { margin-top: 0.5em; }
 
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
-<input id="email" placeholder="Email (optional)"><br><br>
 <textarea id="content" placeholder="Your comment"></textarea><br>
 <button id="postBtn">Post Comment</button>
 
 <script>
-window.onload = function() {
-  console.log("NEW CODE IS LOADED"); // ✅ marker to confirm new code
-  throw new Error("This is a test to confirm new code is running"); // ✅ intentional test error
+/* ================================
+   Supabase initialization
+   ================================ */
 
-  // Initialize Supabase client with a different variable name
-  const sb = supabase.createClient(
+const sb = supabase.createClient(
   'https://pidzgdrdgqgsayfoxqba.supabase.co',
   'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z'
 );
 
-  // Function to post a comment
-  async function postComment(parentId = null) {
-    const name = document.getElementById('name').value || null;
-    const email = document.getElementById('email').value || null;
-    const content = document.getElementById('content').value;
+/* ================================
+   Post comment
+   ================================ */
+async function postComment() {
+  const name = document.getElementById('name').value || null;
+  const content = document.getElementById('content').value.trim();
 
-    if (!content.trim()) {
-      alert("Please write a comment before posting.");
-      return;
-    }
-
-    const { data, error } = await supabaseClient
-      .from('comments')
-      .insert([{
-        id: crypto.randomUUID(),
-        parent_id: parentId,
-        page: 'life-and-death-in-gaza',
-        name,
-        email,
-        content
-      }]);
-
-    if (error) {
-      console.error(error);
-      alert("Error posting comment.");
-    } else {
-      document.getElementById('name').value = '';
-      document.getElementById('email').value = '';
-      document.getElementById('content').value = '';
-      loadComments();
-    }
+  if (!content) {
+    alert('Please write a comment.');
+    return;
   }
 
-  // Function to load all comments for this page
-  async function loadComments() {
-    const { data, error } = await supabaseClient
-      .from('comments')
-      .select('*')
-      .eq('page', 'life-and-death-in-gaza')
-      .order('created_at', { ascending: true });
+  const { error } = await sb.from('comments').insert({
+    name: name,
+    content: content,
+    page: 'life-and-death-in-gaza'
+  });
 
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    const container = document.getElementById('comments');
-    container.innerHTML = '';
-    data.forEach(comment => {
-      const div = document.createElement('div');
-      div.className = 'comment';
-      div.innerHTML = `<strong>${comment.name || 'Anonymous'}</strong>: ${comment.content}`;
-      container.appendChild(div);
-    });
+  if (error) {
+    console.error(error);
+    alert('Error posting comment');
+    return;
   }
 
-  // Attach click listener to Post Comment button
-  document.getElementById('postBtn').addEventListener('click', () => postComment());
+  document.getElementById('name').value = '';
+  document.getElementById('content').value = '';
 
-  // Load comments on page load
   loadComments();
-};
+}
+
+/* ================================
+   Load comments
+   ================================ */
+async function loadComments() {
+  const { data, error } = await sb
+    .from('comments')
+    .select('*')
+    .eq('page', 'life-and-death-in-gaza')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const container = document.getElementById('comments');
+  container.innerHTML = '';
+
+  data.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'comment';
+    div.innerHTML = `<strong>${c.name || 'Anonymous'}</strong><br>${c.content}`;
+    container.appendChild(div);
+  });
+}
+
+/* ================================
+   Event wiring
+   ================================ */
+document.getElementById('postBtn').addEventListener('click', postComment);
+
+/* ================================
+   Initial load
+   ================================ */
+loadComments();
 </script>
 
 </body>
