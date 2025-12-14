@@ -1,4 +1,3 @@
-<!-- Trigger rebuild -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -27,6 +26,9 @@ button { margin-top: 0.5em; }
 
 <script>
 window.onload = function() {
+  console.log("NEW CODE IS LOADED"); // ✅ marker to confirm new code
+  throw new Error("This is a test to confirm new code is running"); // ✅ intentional test error
+
   // Initialize Supabase client with a different variable name
   const supabaseClient = supabase.createClient(
     'https://pidzgdrdgqgsayfoxqba.supabase.co',   // Your Supabase URL
