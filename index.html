@@ -64,7 +64,7 @@ let currentParentId = null;  // To track the parent comment ID for replies
 let isReplying = false;      // To track if the user is replying or posting a new comment
 
 /* ================================
-   Post comment
+   Post a new comment
    ================================ */
 async function postComment() {
   const name = document.getElementById('name').value || null;
@@ -76,14 +76,12 @@ async function postComment() {
     return;
   }
 
-  // If replying, we set the parent_id as currentParentId
-  console.log(`Posting comment with parentId: ${currentParentId}`); // Log to check
-
+  // Insert the comment into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
     email: email,  // Insert email value
     content: content,
-    parent_id: currentParentId,  // Parent comment ID (null for main comments)
+    parent_id: null,  // No parent, so this is a main comment
     page: 'life-and-death-in-gaza'
   });
 
@@ -98,16 +96,50 @@ async function postComment() {
   document.getElementById('email').value = '';  // Clear email field after submission
   document.getElementById('content').value = '';
 
-  // Reset currentParentId to null after posting
+  // Reload the comments to display the newly posted comment
+  loadComments();
+}
+
+/* ================================
+   Post a reply
+   ================================ */
+async function postReply() {
+  const name = document.getElementById('name').value || null;
+  const email = document.getElementById('email').value.trim() || null;
+  const content = document.getElementById('content').value.trim();
+
+  if (!content) {
+    alert('Please write a reply.');
+    return;
+  }
+
+  // Insert the reply into Supabase with the parent_id
+  const { error } = await sb.from('comments').insert({
+    name: name,
+    email: email,
+    content: content,
+    parent_id: currentParentId,  // Set the parent_id for replies
+    page: 'life-and-death-in-gaza'
+  });
+
+  if (error) {
+    console.error(error);
+    alert('Error posting reply');
+    return;
+  }
+
+  // Clear the input fields after posting the reply
+  document.getElementById('name').value = '';
+  document.getElementById('email').value = '';  // Clear email field after submission
+  document.getElementById('content').value = '';
+
+  // Reset currentParentId after posting the reply
   currentParentId = null;
 
-  // Reset the reply flag
-  isReplying = false;
-
-  // Reset the button text
+  // Reset the button text back to "Post Comment"
   document.getElementById('postBtn').innerText = "Post Comment";
 
-  // Reload the comments to display the newly posted comment
+  // Reload the comments to display the newly posted reply
   loadComments();
 }
 
@@ -172,12 +204,9 @@ function replyToComment(parentId) {
   currentParentId = parentId;
 
   // Set the flag to indicate we're replying
-  isReplying = true;
-
-  // Change the text in the textarea to indicate replying
   document.getElementById('content').placeholder = 'Your reply...';
 
-  // Update the button action text
+  // Change the button text to "Post Reply"
   document.getElementById('postBtn').innerText = "Post Reply";
 }
 
