@@ -72,6 +72,8 @@ async function postComment(parentId = null) {
     return;
   }
 
+  console.log(`Posting comment with parentId: ${parentId}`); // Log to check
+
   // Insert the comment along with name, email, content, and parent_id into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
@@ -111,11 +113,14 @@ async function loadComments() {
     return;
   }
 
+  console.log("Loaded comments:", data); // Log to check
+
   const container = document.getElementById('comments');
   container.innerHTML = ''; // Clear existing comments before reloading
 
   // Helper function to display comments
   function displayComments(comments, parentId = null) {
+    // Filter and display the comments that match the parentId
     comments.filter(c => c.parent_id === parentId).forEach(c => {
       const div = document.createElement('div');
       div.className = 'comment';
@@ -129,7 +134,7 @@ async function loadComments() {
       // Append the comment to the container
       container.appendChild(div);
 
-      // Display replies recursively
+      // Recursively display replies (comments with matching parent_id)
       displayComments(comments, c.id);
     });
   }
@@ -142,6 +147,8 @@ async function loadComments() {
    Reply to comment
    ================================ */
 function replyToComment(parentId) {
+  console.log(`Replying to comment with parentId: ${parentId}`); // Log to check
+
   // Set the parentId in the form for replying
   document.getElementById('content').placeholder = 'Your reply...';
   
