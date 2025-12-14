@@ -26,10 +26,10 @@ button { margin-top: 0.5em; }
 
 <script>
 window.onload = function() {
-  // Initialize Supabase client
-  const supabase = supabase.createClient(
-    'https://pidzgdrdgqgsayfoxqba.supabase.co',   // Supabase URL
-    'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z' // Supabase anon key
+  // Initialize Supabase client with a different variable name
+  const supabaseClient = supabase.createClient(
+    'https://pidzgdrdgqgsayfoxqba.supabase.co',   // Your Supabase URL
+    'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z' // Your anon key
   );
 
   // Function to post a comment
@@ -43,12 +43,12 @@ window.onload = function() {
       return;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('comments')
       .insert([{
         id: crypto.randomUUID(),
         parent_id: parentId,
-        page: 'life-and-death-in-gaza', // page identifier
+        page: 'life-and-death-in-gaza', // Your page identifier
         name,
         email,
         content
@@ -67,7 +67,7 @@ window.onload = function() {
 
   // Function to load all comments for this page
   async function loadComments() {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('comments')
       .select('*')
       .eq('page', 'life-and-death-in-gaza')
