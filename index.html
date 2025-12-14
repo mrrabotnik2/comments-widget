@@ -44,7 +44,7 @@
 <input id="email" type="email" placeholder="Your Email"><br><br>
 
 <textarea id="content" placeholder="Your comment"></textarea><br>
-<button id="postBtn" onclick="postComment()">Post Comment</button>
+<button id="postBtn">Post Comment</button>
 
 <!-- Comment container -->
 <div id="comments"></div>
@@ -59,10 +59,13 @@ const sb = supabase.createClient(
   'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z'
 );
 
+// Global variable to keep track of current parent_id
+let currentParentId = null;
+
 /* ================================
    Post comment
    ================================ */
-async function postComment(parentId = null) {
+async function postComment() {
   const name = document.getElementById('name').value || null;
   const email = document.getElementById('email').value.trim() || null;
   const content = document.getElementById('content').value.trim();
@@ -72,14 +75,14 @@ async function postComment(parentId = null) {
     return;
   }
 
-  console.log(`Posting comment with parentId: ${parentId}`); // Log to check
+  console.log(`Posting comment with parentId: ${currentParentId}`); // Log to check
 
   // Insert the comment along with name, email, content, and parent_id into Supabase
   const { error } = await sb.from('comments').insert({
     name: name,
     email: email,  // Insert email value
     content: content,
-    parent_id: parentId,  // Parent comment ID (null for main comments)
+    parent_id: currentParentId,  // Parent comment ID (null for main comments)
     page: 'life-and-death-in-gaza'
   });
 
@@ -93,6 +96,9 @@ async function postComment(parentId = null) {
   document.getElementById('name').value = '';
   document.getElementById('email').value = '';  // Clear email field after submission
   document.getElementById('content').value = '';
+
+  // Reset currentParentId to null (no parent for new comments)
+  currentParentId = null;
 
   // Reload the comments to display the newly posted comment
   loadComments();
@@ -149,13 +155,14 @@ async function loadComments() {
 function replyToComment(parentId) {
   console.log(`Replying to comment with parentId: ${parentId}`); // Log to check
 
+  // Set the parentId in the global variable to make it persist
+  currentParentId = parentId;
+
   // Change the text in the textarea to indicate replying
   document.getElementById('content').placeholder = 'Your reply...';
 
   // Change the button action to post a reply (with parentId)
-  document.getElementById('postBtn').onclick = function() {
-    postComment(parentId);  // Post with the correct parentId
-  };
+  document.getElementById('postBtn').innerHTML = "Post Reply"; // Change button text
 }
 
 /* ================================
