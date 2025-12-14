@@ -55,14 +55,8 @@ const sb = supabase.createClient(
    // Get the page identifier from the URL or set it manually
    // ================================
 function getPageIdentifier() {
-  // Option 1: Get page identifier dynamically from the URL
   const urlPath = window.location.pathname;
-  // Assuming the URL path is something like /page1, /page2, etc.
   const page = urlPath.split('/').pop(); // Extract last part of the URL (e.g., page1, page2)
-
-  // Option 2: Alternatively, you can set the page manually like so:
-  // const page = 'life-and-death-in-gaza'; // for a specific page
-  
   return page;
 }
 
@@ -80,12 +74,12 @@ async function postComment() {
     return;
   }
 
-  // Insert the comment into Supabase
+  // Insert the comment into Supabase, associating with the page
   const { error } = await sb.from('comments').insert({
     name: name,
     email: email,  // Email is stored but not displayed
     content: content,
-    page: page // Store which page the comment belongs to
+    page: page // Associate comment with the current page
   });
 
   if (error) {
@@ -112,7 +106,7 @@ async function loadComments() {
   const { data, error } = await sb
     .from('comments')
     .select('*')
-    .eq('page', page) // Load comments for the specific page
+    .eq('page', page) // Load comments only for the current page
     .order('created_at', { ascending: false }); // Newest first
 
   if (error) {
