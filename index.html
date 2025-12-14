@@ -35,10 +35,7 @@
 <!-- Comment form -->
 <h4>Leave a comment</h4>
 <input id="name" placeholder="Name (optional)"><br><br>
-
-<!-- Email input field visible to users -->
 <input id="email" type="email" placeholder="Your Email"><br><br>
-
 <textarea id="content" placeholder="Your comment"></textarea><br>
 <button id="postBtn" onclick="postComment()">Post Comment</button>
 
@@ -46,22 +43,37 @@
 <div id="comments"></div>
 
 <script>
-/* ================================
-   Supabase initialization
-   ================================ */
-
+// ================================
+   // Supabase initialization
+   // ================================
 const sb = supabase.createClient(
   'https://pidzgdrdgqgsayfoxqba.supabase.co',
   'sb_publishable_-rGnPqFMdXSVXmKdI2bCow_R7uuC53z'
 );
 
-/* ================================
-   Post comment
-   ================================ */
+// ================================
+   // Get the page identifier from the URL or set it manually
+   // ================================
+function getPageIdentifier() {
+  // Option 1: Get page identifier dynamically from the URL
+  const urlPath = window.location.pathname;
+  // Assuming the URL path is something like /page1, /page2, etc.
+  const page = urlPath.split('/').pop(); // Extract last part of the URL (e.g., page1, page2)
+
+  // Option 2: Alternatively, you can set the page manually like so:
+  // const page = 'life-and-death-in-gaza'; // for a specific page
+  
+  return page;
+}
+
+// ================================
+   // Post comment
+   // ================================
 async function postComment() {
   const name = document.getElementById('name').value || null;
   const email = document.getElementById('email').value.trim() || null;
   const content = document.getElementById('content').value.trim();
+  const page = getPageIdentifier(); // Get the page identifier dynamically
 
   if (!content) {
     alert('Please write a comment.');
@@ -73,7 +85,7 @@ async function postComment() {
     name: name,
     email: email,  // Email is stored but not displayed
     content: content,
-    page: 'life-and-death-in-gaza'
+    page: page // Store which page the comment belongs to
   });
 
   if (error) {
@@ -91,15 +103,17 @@ async function postComment() {
   loadComments();
 }
 
-/* ================================
-   Load comments in reverse order (newest first)
-   ================================ */
+// ================================
+   // Load comments for the current page
+   // ================================
 async function loadComments() {
+  const page = getPageIdentifier(); // Get the page identifier dynamically
+
   const { data, error } = await sb
     .from('comments')
     .select('*')
-    .eq('page', 'life-and-death-in-gaza')
-    .order('created_at', { ascending: false });  // Correct sorting, newest comments first
+    .eq('page', page) // Load comments for the specific page
+    .order('created_at', { ascending: false }); // Newest first
 
   if (error) {
     console.error(error);
@@ -109,7 +123,7 @@ async function loadComments() {
   const container = document.getElementById('comments');
   container.innerHTML = ''; // Clear existing comments before reloading
 
-  // Display all comments in reverse order (newest first)
+  // Display all comments
   data.forEach(c => {
     const div = document.createElement('div');
     div.className = 'comment';
@@ -124,9 +138,9 @@ async function loadComments() {
   });
 }
 
-/* ================================
-   Initial load
-   ================================ */
+// ================================
+   // Initial load
+   // ================================
 loadComments();
 </script>
 
